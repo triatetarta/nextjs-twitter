@@ -1,6 +1,18 @@
 import Head from "next/head";
+import Feed from "../components/Feed";
+import Sidebar from "../components/Sidebar";
+import { getProviders, getSession, useSession } from "next-auth/react";
+import Login from "../components/Login";
+import Modal from "../components/Modal";
+import { useSelector } from "react-redux";
+import Widgets from "../components/Widgets";
 
-export default function Home() {
+export default function Home({ trendingResults, followResults, providers }) {
+  const { data: session } = useSession();
+  const { modalOpen } = useSelector((state) => state.modal);
+
+  if (!session) return <Login providers={providers} />;
+
   return (
     <div>
       <Head>
@@ -9,7 +21,37 @@ export default function Home() {
         <link rel='icon' href='/favicon.ico' />
       </Head>
 
-      <h1 className='text-2xl'>Hello World</h1>
+      <main className='min-h-screen flex max-w-[1500px] mx-auto'>
+        <Sidebar />
+        <Feed />
+
+        <Widgets
+          trendingResults={trendingResults}
+          followResults={followResults}
+        />
+
+        {modalOpen && <Modal />}
+      </main>
     </div>
   );
+}
+
+export async function getServerSideProps(context) {
+  const trendingResults = await fetch("https://jsonkeeper.com/b/NKEV").then(
+    (res) => res.json()
+  );
+  const followResults = await fetch("https://jsonkeeper.com/b/WWMJ").then(
+    (res) => res.json()
+  );
+  const providers = await getProviders();
+  const session = await getSession(context);
+
+  return {
+    props: {
+      trendingResults,
+      followResults,
+      providers,
+      session,
+    },
+  };
 }
