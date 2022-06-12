@@ -13,9 +13,12 @@ import {
   doc,
   serverTimestamp,
   updateDoc,
-} from "@firebase/firestore";
+} from "firebase/firestore";
 import { signOut, useSession } from "next-auth/react";
-import { getDownloadURL, ref, uploadString } from "@firebase/storage";
+import { getDownloadURL, ref, uploadString } from "firebase/storage";
+import { emojiList } from "../constants/data";
+import { useSelector, useDispatch } from "react-redux";
+import { setEmojiModalClose, setEmojiModalOpen } from "../redux/modalSlice";
 
 function Input() {
   const { data: session } = useSession();
@@ -23,7 +26,10 @@ function Input() {
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const filePickerRef = useRef(null);
-  const [showEmojis, setShowEmojis] = useState(false);
+  const [emojis, setEmojis] = useState(emojiList);
+  const { emojiModalOpen } = useSelector((state) => state.modal);
+
+  const dispatch = useDispatch();
 
   const addImageToPost = (e) => {
     const reader = new FileReader();
@@ -63,15 +69,15 @@ function Input() {
     setLoading(false);
     setInput("");
     setSelectedFile(null);
-    setShowEmojis(false);
+    dispatch(setEmojiModalClose());
   };
 
-  const addEmoji = (e) => {
-    let sym = e.unified.split("-");
-    let codesArray = [];
-    sym.forEach((el) => codesArray.push("0x" + el));
-    let emoji = String.fromCodePoint(...codesArray);
-    setInput(input + emoji);
+  const addEmoji = (emj) => {
+    if (input !== "") {
+      setInput(input + emj);
+    } else {
+      setInput(emj);
+    }
   };
 
   return (
@@ -133,7 +139,15 @@ function Input() {
                 <ChartBarIcon className='text-primaryBlue h-[20px]' />
               </div>
 
-              <div className='icon' onClick={() => setShowEmojis(!showEmojis)}>
+              <div
+                className='icon relative'
+                onClick={(e) => {
+                  e.stopPropagation();
+                  emojiModalOpen
+                    ? dispatch(setEmojiModalClose())
+                    : dispatch(setEmojiModalOpen());
+                }}
+              >
                 <EmojiHappyIcon className='text-primaryBlue h-[20px]' />
               </div>
 
@@ -141,19 +155,23 @@ function Input() {
                 <CalendarIcon className='text-primaryBlue h-[20px]' />
               </div>
 
-              {showEmojis && (
-                <div></div>
-                // <Picker
-                //   onSelect={addEmoji}
-                //   style={{
-                //     position: "absolute",
-                //     marginTop: "465px",
-                //     marginLeft: -40,
-                //     maxWidth: "320px",
-                //     borderRadius: "20px",
-                //   }}
-                //   theme='dark'
-                // />
+              {emojiModalOpen && (
+                <div className='emojiModal bg-mainBg absolute top-[180px] -ml-[40px] w-[280px] rounded-lg flex flex-wrap p-4 border border-gray-700'>
+                  {emojis.map((emj, index) => {
+                    return (
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addEmoji(emj.emoji);
+                        }}
+                        className='text-lg hover:bg-mainWhite/10 hover:bg-opacity-10 rounded-full cursor-pointer w-[40px] h-[40px] flex items-center justify-center'
+                        key={emj.id}
+                      >
+                        {emj.emoji}
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
             <button

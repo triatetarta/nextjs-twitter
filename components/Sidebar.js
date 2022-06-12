@@ -12,14 +12,23 @@ import {
 } from "@heroicons/react/outline";
 import SidebarLink from "./SidebarLinks";
 import { signOut, useSession } from "next-auth/react";
+import { useDispatch } from "react-redux";
+import { setModalOpen, setPostId } from "../redux/modalSlice";
 
 const Sidebar = () => {
   const { data: session } = useSession();
 
+  const dispatch = useDispatch();
+
   return (
     <div className='hidden sm:flex flex-col items-center xl:items-start xl:w-[340px] p-2 fixed h-full'>
-      <div className='flex items-center justify-center w-14 h-14 hoverAnimation p-0 xl:ml-24'>
-        <Image src='/assets/twitter.jpg' width={30} height={30} />
+      <div className='flex items-center justify-center w-14 h-14 hoverAnimation p-0 xl:ml-24 relative'>
+        <Image
+          src='/assets/twitter.jpg'
+          width={30}
+          height={30}
+          objectFit='contain'
+        />
       </div>
       <div className='space-y-2.5 mt-4 mb-2.5 xl:ml-24'>
         <SidebarLink text='Home' Icon={HomeIcon} active />
@@ -30,8 +39,15 @@ const Sidebar = () => {
         <SidebarLink text='Lists' Icon={ClipboardListIcon} />
         <SidebarLink text='Profile' Icon={UserIcon} />
         <SidebarLink text='More' Icon={DotsCircleHorizontalIcon} />
+        <SidebarLink text='' Icon={null} compose />
       </div>
-      <button className='hidden xl:inline ml-auto bg-primaryBlue text-mainWhite rounded-full w-56 h-[52px] text-lg font-bold shadow-md hover:bg-hoverBlue'>
+      <button
+        onClick={() => {
+          dispatch(setModalOpen());
+          dispatch(setPostId(""));
+        }}
+        className='hidden xl:inline ml-auto bg-primaryBlue text-mainWhite rounded-full w-56 h-[52px] text-lg font-bold shadow-md hover:bg-hoverBlue'
+      >
         Tweet
       </button>
       <div
